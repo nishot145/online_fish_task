@@ -51,6 +51,7 @@ body { background:var(--bg); font-family:'Segoe UI',system-ui,sans-serif; color:
 .scene-progress { display:flex; gap:8px; justify-content:center; margin-bottom:22px; }
 .scene-dot { width:10px; height:10px; border-radius:50%; background:var(--border); transition:background .2s; }
 .scene-dot.active { background:var(--green); }
+.scene-img  { width:100%; max-height:220px; object-fit:contain; border-radius:10px; margin-bottom:18px; }
 .scene-body { font-size:1.05rem; line-height:1.9; margin:0 0 28px; min-height:80px; }
 .btn-nav-row { display:flex; gap:12px; justify-content:center; }
 
@@ -193,6 +194,16 @@ async function sendToGAS(data) {
 const jsPsych = initJsPsych({ on_finish() { showEndScreen(); } });
 
 /* ── 5. 教示スライドプラグイン ──────────────────────────── */
+const SCENE_IMAGES = [
+  "images/scene1.png",  // シーン1
+  "images/scene2.png",  // シーン2
+  "images/scene3.png",  // シーン3
+  "images/scene4.png",  // シーン4
+  "images/scene5.png",  // シーン5
+  "images/scene6.png",  // シーン6
+  null,                  // シーン7：画像なし
+];
+
 const SCENES = [
   "このビンの中には<b>85:15の比率で黒と黄色の玉が100個</b>入っています。",
   "もう一方のビンの中には100個の玉が<b>逆の比率（黒15：黄85）</b>で入っています。",
@@ -212,10 +223,16 @@ class InstructionSlidesPlugin {
       const dots = SCENES.map((_, i) =>
         `<div class="scene-dot ${i === current ? "active" : ""}"></div>`
       ).join("");
+      const imgSrc = SCENE_IMAGES[current];
+      const imgHTML = imgSrc
+        ? `<img src="${imgSrc}" class="scene-img" alt="シーン${current + 1}">`
+        : "";
+
       display_el.innerHTML = `
         <div class="card">
           <h1 class="task-title">ビーズ課題の説明</h1>
           <div class="scene-progress">${dots}</div>
+          ${imgHTML}
           <div class="scene-body">${SCENES[current]}</div>
           <div class="btn-nav-row">
             ${current > 0 ? `<button class="btn btn-back" id="btn-back">← 戻る</button>` : ""}
