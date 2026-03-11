@@ -55,10 +55,10 @@ body { background:var(--bg); font-family:'Segoe UI',system-ui,sans-serif; color:
 .scene-progress { display:flex; gap:8px; justify-content:center; margin-bottom:22px; }
 .scene-dot { width:10px; height:10px; border-radius:50%; background:var(--border); transition:background .2s; }
 .scene-dot.active { background:var(--green); }
-.scene-img      { width:100%; max-height:220px; object-fit:contain; border-radius:10px; margin-bottom:18px; }
+.scene-img      { width:50%; object-fit:contain; border-radius:10px; margin-bottom:18px; }
 .scene-img-row  { display:flex; gap:30px; justify-content:center; margin-bottom:18px; }
-.scene-img-half { display:block; max-height:220px; object-fit:contain; border-radius:10px; }
-.scene-body { font-size:1.05rem; line-height:1.9; margin:0 0 28px; min-height:80px; }
+.scene-img-half { display:block; width:33%; object-fit:contain; border-radius:10px;}
+.scene-body { font-size:1.35rem; line-height:1.9; margin:0 0 28px; min-height:80px; }
 .btn-nav-row { display:flex; gap:12px; justify-content:center; }
 
 /* progress */
@@ -264,7 +264,7 @@ class InstructionSlidesPlugin {
           <div class="btn-nav-row">
             ${current > 0 ? `<button class="btn btn-back" id="btn-back">← 戻る</button>` : ""}
             <button class="btn btn-next" id="btn-next" style="width:auto;padding:12px 28px">
-              ${isLast ? "実験開始 →" : "次へ →"}
+              ${isLast ? "次へ →" : "次へ →"}
             </button>
             ${isLast ? `<button class="btn btn-back" id="btn-restart">もう一度</button>` : ""}
           </div>
