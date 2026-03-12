@@ -48,6 +48,7 @@ body { background:var(--bg); font-family:'Segoe UI',system-ui,sans-serif; color:
 .jspsych-content { width:100%; }
 
 .card { background:var(--card); border-radius:0; box-shadow:none; padding:40px 80px; text-align:center; min-height:100vh; box-sizing:border-box; }
+.card-instruction { background:var(--card); border-radius:0; box-shadow:none; padding:40px 80px; text-align:center; min-height:100vh; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; justify-content:center; }
 .task-title { font-size:1.35rem; font-weight:700; margin:0 0 6px; }
 .subtitle   { color:var(--muted); margin:0 0 20px; font-size:.88rem; line-height:1.7; }
 
@@ -55,7 +56,7 @@ body { background:var(--bg); font-family:'Segoe UI',system-ui,sans-serif; color:
 .scene-progress { display:flex; gap:8px; justify-content:center; margin-bottom:22px; }
 .scene-dot { width:10px; height:10px; border-radius:50%; background:var(--border); transition:background .2s; }
 .scene-dot.active { background:var(--green); }
-.scene-img      { width:50%; object-fit:contain; border-radius:10px; margin-bottom:18px; }
+.scene-img      { width:40%; object-fit:contain; border-radius:10px; margin-bottom:18px; }
 .scene-img-row  { display:flex; gap:30px; justify-content:center; margin-bottom:18px; }
 .scene-img-half { display:block; width:33%; object-fit:contain; border-radius:10px;}
 .scene-body { font-size:1.35rem; line-height:1.9; margin:0 0 28px; min-height:80px; }
@@ -163,6 +164,15 @@ body { background:var(--bg); font-family:'Segoe UI',system-ui,sans-serif; color:
 .btn-back   { background:#E2E8F0; color:var(--text); }
 .btn:disabled { opacity:.35; cursor:not-allowed; transform:none; }
 
+/* task layout */
+.task-layout { display:flex; align-items:center; justify-content:center; gap:24px; margin:16px 0; }
+.task-lake-img { width:42%; object-fit:contain; }
+.task-center { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; min-width:160px; }
+.caught-fish-img { width:120px; object-fit:contain; animation:pop .22s ease; }
+.seq-fish-row { display:flex; flex-wrap:wrap; gap:4px; justify-content:center; }
+.seq-fish-img { width:32px; object-fit:contain; }
+.seq-fish-img.newest { filter: drop-shadow(0 0 4px var(--blue)); }
+
 /* result table */
 .data-table { width:100%; border-collapse:collapse; margin-top:16px; font-size:.78rem; text-align:left; }
 .data-table th,.data-table td { border:1px solid var(--border); padding:5px 7px; }
@@ -227,17 +237,18 @@ const SCENES = [
   "この課題では、2つの湖（A湖とB湖）が登場します。<br>それぞれの湖には<b>黒い魚と白い魚</b>が異なる比率で泳いでいます。",
   "漁師はどちらか一方の湖だけで釣りをしますが、どちらの湖で釣りをしているかは分かりません。<br>あなたは釣れた魚の色を見て、漁師がどちらの湖で釣りをしているかを予想してください。",
   "湖Aには黒い魚が<b>80匹</b>と白い魚が<b>20匹</b>、湖Bには白い魚が<b>80匹</b>と黒い魚が<b>20匹</b>泳いでいます。<br><b>釣れた魚は毎回湖に戻される</b>ため、湖の魚の比率は変わりません。",
-  "評価は9段階で行います。左端は Lake A の可能性が非常に低い、右端は非常に高いことを示します。",
+  "評価は9段階で行います。左端はA湖で釣りをしている可能性が高く、右端はB湖で釣りをしている可能性が高いことを示します。真ん中はどちらで釣りをしているか決めきれない場合を示します。",
   "漁師は1日に10匹魚を釣り上げます。次の日になったら漁師はまた湖を選びなおします。<br>あなたには、これから<b>6日間</b>漁師が釣った魚の色を見て、湖を予想していただきます。",
   "課題の内容が理解できたら「次へ」を、もう一度確認したい場合は「もう一度」をクリックしてください。",
 ];
 
 const SCENE_IMAGES = [
-  ["images/Lake_A_B80.png", "images/Lake_B_W80.png"],  // シーン1: 横並び2枚
-  "images/fisherman.png",
-  ["images/Lake_A_B80.png", "images/Lake_B_W80.png"],
+  ["images/lake_A.png", "images/lake_B.png"],  // シーン1: 横並び2枚
+  "images/fisherman2.png",
+  ["images/lake_A.png", "images/lake_B.png"],
   "images/scene4.png",
-  "images/scene5.png",
+  "images/task.png",
+  "images/task.png",
   null,
 ];
 
@@ -256,7 +267,7 @@ class InstructionSlidesPlugin {
           ? `<div class="scene-img-row">${imgSrc.map(s => `<img src="${s}" class="scene-img-half" alt="">`).join("")}</div>`
           : `<img src="${imgSrc}" class="scene-img" alt="scene${current+1}">`;
       display_el.innerHTML = `
-        <div class="card">
+        <div class="card-instruction">
           <h1 class="task-title">課題の説明</h1>
           <div class="scene-progress">${dots}</div>
           ${imgHTML}
@@ -269,8 +280,10 @@ class InstructionSlidesPlugin {
             ${isLast ? `<button class="btn btn-back" id="btn-restart">もう一度</button>` : ""}
           </div>
         </div>`;
-      document.getElementById("btn-next").onclick = () =>
-        isLast ? this.jsPsych.finishTrial() : (current++, render());
+      document.getElementById("btn-next").onclick = () => {
+        if (isLast) { this.jsPsych.finishTrial(); }
+        else { current++; render(); }
+      };
       document.getElementById("btn-back")?.addEventListener("click",    () => { current--; render(); });
       document.getElementById("btn-restart")?.addEventListener("click", () => { current = 0; render(); });
     };
@@ -295,10 +308,18 @@ class FishTaskPlugin {
     const total    = series.sequence.length;
     const pct      = (catchNum / total * 100).toFixed(0);
 
+    // これまでの魚アイコン列
+    const seqImgHTML = seq.length
+      ? seq.map((c, i) =>
+          `<img src="images/${c === "black" ? "blackfish" : "whitefish"}.png"
+                class="seq-fish-img${i === seq.length - 1 ? " newest" : ""}"
+                alt="${c}">`
+        ).join("")
+      : `<span style="color:var(--muted);font-size:.85rem">まだ魚を釣っていません</span>`;
+
     display_el.innerHTML = `
       <div class="card">
-        <h1 class="task-title">Series ${series.id} / ${SERIES.length}</h1>
-        <p class="subtitle">ボタンを押して魚を1匹釣ってください。</p>
+        <h1 class="task-title">${series.id} 日目</h1>
 
         <div class="progress-wrap">
           <div class="progress-label">${catchNum} / ${total} 匹目</div>
@@ -307,26 +328,18 @@ class FishTaskPlugin {
           </div>
         </div>
 
-        <div class="lakes-row">
-          <div class="lake-block lake-a">
-            <div class="lake-label a">Lake A</div>
-            <div class="lake-ratio">⚫ 黒 ${series.lakeA.black}% ／ ⚪ 白 ${series.lakeA.white}%</div>
-            ${fishGridHTML(series.lakeA)}
+        <div class="task-layout">
+          <img src="images/lake_A.png" class="task-lake-img" alt="A湖">
+          <div class="task-center">
+            <div class="seq-label">これまでに釣れた魚</div>
+            <div class="seq-fish-row">${seqImgHTML}</div>
+            <p style="font-size:.95rem;color:var(--blue);font-weight:700;margin:8px 0 0">
+              次は <b>${catchNum + 1}</b> 匹目です
+            </p>
+            <button class="btn btn-catch" id="btn-catch">釣れた魚を確認する</button>
           </div>
-          <div class="lake-block lake-b">
-            <div class="lake-label b">Lake B</div>
-            <div class="lake-ratio">⚫ 黒 ${series.lakeB.black}% ／ ⚪ 白 ${series.lakeB.white}%</div>
-            ${fishGridHTML(series.lakeB)}
-          </div>
+          <img src="images/lake_B.png" class="task-lake-img" alt="B湖">
         </div>
-
-        <div class="seq-label">これまで釣れた魚</div>
-        <div class="seq-beads">${seqHTML(seq)}</div>
-
-        <p style="font-size:.95rem;color:var(--blue);font-weight:700;margin:0 0 12px">
-          次は <b>${catchNum + 1}</b> 匹目です
-        </p>
-        <button class="btn btn-catch" id="btn-catch">🎣 魚を釣る</button>
       </div>`;
 
     document.getElementById("btn-catch").onclick = () => {
@@ -342,12 +355,12 @@ class FishTaskPlugin {
     const catchNum = seq.length;
     const total    = series.sequence.length;
     const pct      = (catchNum / total * 100).toFixed(0);
-    const colorLabel = fishColor === "black" ? "⚫ 黒" : "⚪ 白";
+    const fishImg  = fishColor === "black" ? "blackfish" : "whitefish";
     let   rated    = false;
 
     display_el.innerHTML = `
       <div class="card">
-        <h1 class="task-title">Series ${series.id} / ${SERIES.length}</h1>
+        <h1 class="task-title">${series.id} 日目</h1>
 
         <div class="progress-wrap">
           <div class="progress-label">${catchNum} / ${total} 匹目</div>
@@ -356,18 +369,24 @@ class FishTaskPlugin {
           </div>
         </div>
 
-        <div class="current-fish-wrap">
-          <div class="current-fish-label">${catchNum} 匹目に釣れた魚</div>
-          <div class="current-fish ${fishColor}">${colorLabel}</div>
+        <div class="task-layout">
+          <img src="images/lake_A.png" class="task-lake-img" alt="A湖">
+          <div class="task-center">
+            <div class="current-fish-label">${catchNum} 匹目に釣り上げた魚</div>
+            <img src="images/${fishImg}.png" class="caught-fish-img" alt="${fishColor}">
+          </div>
+          <img src="images/lake_B.png" class="task-lake-img" alt="B湖">
         </div>
 
         <div class="rating-section">
-          <div class="rating-title">漁師はどちらの湖で釣りをしていると思いますか？</div>
+          <div class="rating-title" style="text-decoration:underline;font-size:1.1rem;color:var(--text)">
+            漁師はどちらの湖で釣りをしているでしょうか？
+          </div>
           ${radioGroupHTML("lake_rating")}
         </div>
 
         <button class="btn btn-next" id="btn-confirm" disabled>
-          ${catchNum < total ? "次の魚へ →" : "このシリーズ終了 ✅"}
+          ${catchNum < total ? "次の魚へ →" : `${series.id}日目を終了する ✅`}
         </button>
       </div>`;
 
@@ -400,10 +419,34 @@ class FishTaskPlugin {
       sendToGAS(record);
 
       if (catchNum >= total) {
-        this.jsPsych.finishTrial({ series_id: series.id, results: this._state.results });
+        // 最終シリーズでなければ中継スライドを挟む
+        const isLastSeries = series.id === SERIES.length;
+        if (isLastSeries) {
+          this.jsPsych.finishTrial({ series_id: series.id, results: this._state.results });
+        } else {
+          this._renderDayTransition(display_el, trial, series);
+        }
       } else {
         this._renderCatch(display_el, trial, series);
       }
+    };
+  }
+  _renderDayTransition(display_el, trial, series) {
+    display_el.innerHTML = `
+      <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;">
+        <img src="images/gohome.png" class="scene-img" alt="">
+        <h1 class="task-title" style="font-size:2rem;margin-bottom:12px">${series.id}日目が終わりました</h1>
+        <p style="font-size:1.1rem;color:var(--muted);margin-bottom:32px;line-height:1.8">
+          漁師は湖を選びなおしました。<br>
+          明日（${series.id + 1}日目）はどちらの湖で釣りをするのでしょうか？
+        </p>
+        <button class="btn btn-next" id="btn-next-day" style="width:auto;padding:14px 36px;font-size:1.05rem">
+          ${series.id + 1}日目へ進む →
+        </button>
+      </div>`;
+
+    document.getElementById("btn-next-day").onclick = () => {
+      this.jsPsych.finishTrial({ series_id: series.id, results: this._state.results });
     };
   }
 }
@@ -441,7 +484,7 @@ function showEndScreen() {
   document.querySelector(".jspsych-display-element").innerHTML = `
     <div class="card" style="">
       <div style="font-size:2.5rem;margin-bottom:8px">🎉</div>
-      <h1 class="task-title">実験終了 — お疲れ様でした！</h1>
+      <h1 class="task-title">終了 — お疲れ様でした！</h1>
       <p class="subtitle">
         参加者ID: <code>${PARTICIPANT_ID}</code><br>
         総釣り数: <b>${nTotal}</b> 匹　｜　平均RT: <b>${avgRT} ms</b><br>
