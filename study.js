@@ -170,8 +170,10 @@ body { background:var(--bg); font-family:'Segoe UI',system-ui,sans-serif; color:
 .task-center { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; min-width:160px; }
 .caught-fish-img { width:120px; object-fit:contain; animation:pop .22s ease; }
 .seq-fish-row { display:flex; flex-wrap:wrap; gap:4px; justify-content:center; }
-.seq-fish-img { width:32px; object-fit:contain; }
-.seq-fish-img.newest { filter: drop-shadow(0 0 4px var(--blue)); }
+.seq-circle { width:22px; height:22px; border-radius:50%; border:2px solid rgba(0,0,0,.15); flex-shrink:0; }
+.seq-circle.black { background:#1E293B; }
+.seq-circle.white { background:#CBD5E1; border-color:#94A3B8; }
+
 
 /* result table */
 .data-table { width:100%; border-collapse:collapse; margin-top:16px; font-size:.78rem; text-align:left; }
@@ -179,6 +181,50 @@ body { background:var(--bg); font-family:'Segoe UI',system-ui,sans-serif; color:
 .data-table th { background:#f8fafc; font-weight:600; }
 .data-table tr:nth-child(even) td { background:#fafbfc; }
 .btn-dl { background:#6366F1; color:#fff; margin-top:16px; }
+
+/* ── モバイル対応 (縦向きスマホ) ───────────────────────── */
+@media (max-width: 600px) {
+  .card, .card-instruction {
+    padding: 24px 16px;
+  }
+  .task-title { font-size: 1.15rem; }
+  .scene-body { font-size: 1rem; min-height: unset; }
+  .scene-img  { width: 80%; }
+  .scene-img-row { gap: 8px; }
+  .scene-img-half { width: 45%; }
+
+  /* 課題画面: 湖を上下に小さく横並び、中央コンテンツを下に */
+  .task-layout {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .task-lakes-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    width: 100%;
+  }
+  .task-lake-img { width: 48%; }
+  .task-center { width: 100%; }
+  .caught-fish-img { width: 80px; }
+
+  /* ラジオボタン */
+  .rating-option { max-width: 30px; }
+  .rating-dot { width: 18px; height: 18px; }
+  .rating-val { font-size: .55rem; }
+  .lake-axis-label { font-size: .68rem; }
+  .axis-line { top: 11px; }
+
+  /* ボタン */
+  .btn { font-size: .9rem; padding: 10px 18px; }
+  .btn-catch, .btn-next { padding: 12px; }
+
+  /* 履歴丸 */
+  .seq-circle { width: 16px; height: 16px; }
+
+  /* 終了画面テーブル */
+  .data-table { font-size: .68rem; }
+}
 </style>`);
 
 /* ── 2. ユーティリティ ──────────────────────────────────── */
@@ -196,7 +242,7 @@ const fishGridHTML = (lake) => {
 const seqHTML = (seq) =>
   seq.length
     ? seq.map((c, i) =>
-        `<div class="seq-bead ${c}${i === seq.length - 1 ? " newest" : ""}"></div>`
+        `<div class="seq-bead ${c}"></div>`
       ).join("")
     : `<span class="seq-empty">まだ釣れていません</span>`;
 
@@ -311,9 +357,7 @@ class FishTaskPlugin {
     // これまでの魚アイコン列
     const seqImgHTML = seq.length
       ? seq.map((c, i) =>
-          `<img src="images/${c === "black" ? "blackfish" : "whitefish"}.png"
-                class="seq-fish-img${i === seq.length - 1 ? " newest" : ""}"
-                alt="${c}">`
+          `<div class="seq-circle ${c}"></div>`
         ).join("")
       : `<span style="color:var(--muted);font-size:.85rem">まだ魚を釣っていません</span>`;
 
@@ -331,7 +375,7 @@ class FishTaskPlugin {
         <div class="task-layout">
           <img src="images/lake_A.png" class="task-lake-img" alt="A湖">
           <div class="task-center">
-            <div class="seq-label">これまでに釣れた魚</div>
+            <div class="seq-label">これまでに釣れた魚の色</div>
             <div class="seq-fish-row">${seqImgHTML}</div>
             <p style="font-size:.95rem;color:var(--blue);font-weight:700;margin:8px 0 0">
               次は <b>${catchNum + 1}</b> 匹目です
@@ -340,6 +384,7 @@ class FishTaskPlugin {
           </div>
           <img src="images/lake_B.png" class="task-lake-img" alt="B湖">
         </div>
+        <div class="task-lakes-row-mobile" style="display:none"></div>
       </div>`;
 
     document.getElementById("btn-catch").onclick = () => {
