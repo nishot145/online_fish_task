@@ -166,6 +166,7 @@ body { background:var(--bg); font-family:'Segoe UI',system-ui,sans-serif; color:
 
 /* task layout */
 .task-layout { display:flex; align-items:center; justify-content:center; gap:24px; margin:16px 0; }
+.task-center-mobile { display:none; flex-direction:column; align-items:center; gap:12px; width:100%; margin-top:12px; }
 .task-lake-img { width:42%; object-fit:contain; }
 .task-center { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; min-width:160px; }
 .caught-fish-img { width:120px; object-fit:contain; animation:pop .22s ease; }
@@ -193,20 +194,17 @@ body { background:var(--bg); font-family:'Segoe UI',system-ui,sans-serif; color:
   .scene-img-row { gap: 8px; }
   .scene-img-half { width: 45%; }
 
-  /* 課題画面: 湖を上下に小さく横並び、中央コンテンツを下に */
+  /* 課題画面: 縦積みレイアウト */
   .task-layout {
     flex-direction: column;
-    gap: 10px;
+    gap: 6px;
+    align-items: center;
   }
-  .task-lakes-row {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    width: 100%;
-  }
-  .task-lake-img { width: 48%; }
+  .task-lake-img { width: 92%; }
   .task-center { width: 100%; }
   .caught-fish-img { width: 80px; }
+  .task-center-desktop { display: none !important; }
+  .task-center-mobile  { display: flex; }
 
   /* ラジオボタン */
   .rating-option { max-width: 30px; }
@@ -374,7 +372,7 @@ class FishTaskPlugin {
 
         <div class="task-layout">
           <img src="images/lake_A.png" class="task-lake-img" alt="A湖">
-          <div class="task-center">
+          <div class="task-center task-center-desktop">
             <div class="seq-label">これまでに釣れた魚の色</div>
             <div class="seq-fish-row">${seqImgHTML}</div>
             <p style="font-size:.95rem;color:var(--blue);font-weight:700;margin:8px 0 0">
@@ -384,15 +382,24 @@ class FishTaskPlugin {
           </div>
           <img src="images/lake_B.png" class="task-lake-img" alt="B湖">
         </div>
-        <div class="task-lakes-row-mobile" style="display:none"></div>
+        <div class="task-center task-center-mobile">
+          <div class="seq-label">これまでに釣れた魚の色</div>
+          <div class="seq-fish-row">${seqImgHTML}</div>
+          <p style="font-size:.95rem;color:var(--blue);font-weight:700;margin:8px 0 0">
+            次は <b>${catchNum + 1}</b> 匹目です
+          </p>
+          <button class="btn btn-catch" id="btn-catch-mobile">釣れた魚を確認する</button>
+        </div>
       </div>`;
 
-    document.getElementById("btn-catch").onclick = () => {
+    const onCatch = () => {
       const t0    = performance.now();
       const color = series.sequence[catchNum];
       this._state.seq.push(color);
       this._renderRating(display_el, trial, series, color, t0);
     };
+    document.getElementById("btn-catch")?.addEventListener("click", onCatch);
+    document.getElementById("btn-catch-mobile")?.addEventListener("click", onCatch);
   }
 
   _renderRating(display_el, trial, series, fishColor, t0) {
@@ -416,11 +423,15 @@ class FishTaskPlugin {
 
         <div class="task-layout">
           <img src="images/lake_A.png" class="task-lake-img" alt="A湖">
-          <div class="task-center">
+          <div class="task-center task-center-desktop">
             <div class="current-fish-label">${catchNum} 匹目に釣り上げた魚</div>
             <img src="images/${fishImg}.png" class="caught-fish-img" alt="${fishColor}">
           </div>
           <img src="images/lake_B.png" class="task-lake-img" alt="B湖">
+        </div>
+        <div class="task-center task-center-mobile">
+          <div class="current-fish-label">${catchNum} 匹目に釣り上げた魚</div>
+          <img src="images/${fishImg}.png" class="caught-fish-img" alt="${fishColor}">
         </div>
 
         <div class="rating-section">
